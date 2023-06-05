@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Keystroke Capture</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+        }
+
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+    </style>
+    <script>
+        var keystrokes = [];
+        var startTime;
+
+        document.addEventListener('keydown', function(event) {
+            if (!startTime) {
+                startTime = Date.now();
+            }
+            keystrokes.push({
+                key: event.key,
+                action: 'press',
+                time: Date.now() - startTime
+            });
+        });
+
+        document.addEventListener('keyup', function(event) {
+            if (!startTime) {
+                startTime = Date.now();
+            }
+            keystrokes.push({
+                key: event.key,
+                action: 'release',
+                time: Date.now() - startTime
+            });
+        });
+
+        function submitForm() {
+            var username = document.getElementById('username').value;
+            var email = document.getElementById('email').value;
+
+            // Convert keystrokes array to JSON string
+            var keystrokesJSON = JSON.stringify(keystrokes);
+
+            // Set the value of the 'keystrokes' input field to the JSON string
+            document.getElementById('keystrokes').value = keystrokesJSON;
+
+            // Submit the form
+            document.getElementById('form').submit();
+        }
+    </script>
+</head>
+<body>
+    <h1>Keystroke Capture</h1>
+    <form id="form" action="/submit" method="post">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username">
+        <label for="email">Email:</label>
+        <input type="text" id="email" name="email">
+        <!-- Hidden input field to store keystrokes -->
+        <input type="hidden" id="keystrokes" name="keystrokes">
+        <input type="button" value="Submit" onclick="submitForm()">
+    </form>
+</body>
+</html>
