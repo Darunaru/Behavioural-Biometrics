@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 import pandas as pd
 import json
 
@@ -6,8 +6,6 @@ app = Flask(__name__)
 
 data = []  # List to store collected keystroke data
 id_counter = 1  # Counter to assign unique IDs
-
-
 
 # Load the existing data from the Excel file, if it exists
 try:
@@ -22,7 +20,8 @@ except FileNotFoundError:
 
 @app.route('/', methods=['GET'])
 def index():
-    return render_template('index.html')
+    success_message = request.args.get('success_message')
+    return render_template('index.html', success_message=success_message)
 
 @app.route('/submit', methods=['POST'])
 def submit():
@@ -70,37 +69,38 @@ def submit():
         'Key Combinations': combinations
     }
 
+    # Calculate Total Hold Time
+    total_hold_time = sum(hold_times)
+
+    # Calculate Total Flight Time
+    total_flight_time = sum(flight_times)
+
+    # Calculate Total Press/Release Timings
+    total_press_release_timings = len(press_release_timings)
+
+    # Calculate Total Key Combinations
+    total_key_combinations = len(combinations)
+
     # Append the data to the list
     data.append(entry_data)
 
+    # Update the entry_data dictionary with the totals
+    entry_data['Total Hold Time'] = total_hold_time
+    entry_data['Total Flight Time'] = total_flight_time
+    entry_data['Total Press/Release Timings'] = total_press_release_timings
+    entry_data['Total Key Combinations'] = total_key_combinations
+
     # Create a DataFrame with the collected data
     df = pd.DataFrame(data)
-    
-    # Perform operations on the collected data
-    # Calculate total hold times for the current entry
-    total_hold_times = sum(hold_times)
-    df.loc[df['Email'] == email, 'Total Hold Times'] = total_hold_times
-
-    # Calculate total flight times for the current entry
-    total_flight_times = sum(flight_times)
-    df.loc[df['Email'] == email, 'Total Flight Times'] = total_flight_times
-
-    # Calculate total key combinations for the current entry
-    total_key_combinations = len(combinations)
-    df.loc[df['Email'] == email, 'Total Key Combinations'] = total_key_combinations
-
-
 
     # Save the DataFrame to an Excel file
     df.to_excel('keystrokes.xlsx', index=False)
 
-    result = f"Data for Entry ID {entry_id} (Email: {email}) saved successfully!\n"
-    result += f"Total Hold Times: {total_hold_times} milliseconds\n"
-    result += f"Total Flight Times: {total_flight_times} milliseconds\n"
-    result += f"Total Key Combinations: {total_key_combinations}\n"
-    result += "Perform additional operations here..."
+    # Display a success message
+    success_message = "Form submitted successfully!"
 
-    return result
+    # Redirect back to the index page with the success message
+    return redirect(url_for('index', success_message=success_message))
 
 if __name__ == '__main__':
     app.run(debug=True)
